@@ -49,12 +49,16 @@ if (file_exists('/var/run/nut/upsmon.pid')) {
       $status[3] = $power==0 ? "<td $red>$val</td>" : "<td $green>$val</td>";
       break;
     case 'ups.realpower.nominal':
+      $real = true;
       $power = strtok($val,' ');
       $status[3] = $power==0 ? "<td $red>$val</td>" : "<td $green>$val</td>";
       break;
     case 'ups.load':
       $load = strtok($val,' ');
       $status[5] = $load>=90 ? "<td $red>$val</td>" : "<td $green>$val</td>";
+      break;
+    case 'ups.mfr':
+      $mfr = strtok($val, ' ');
       break;
     }
     if ($all) {
@@ -64,7 +68,10 @@ if (file_exists('/var/run/nut/upsmon.pid')) {
     }
   }
   if ($all && count($rows)%2==1) $result[] = "<td></td><td></td></tr>";
-  if ($power && $load) $status[4] = ($load>=90 ? "<td $red>" : "<td $green>").intval($power*$load/100)." Watts</td>";
+  if ($power && $load) {
+    $realpower = (@$real !== true && strtolower($mfr) === "eaton") ? round($load * 0.01 * $power * 0.80) : round($power * $load / 100);
+    $status[4] = ($load>=90 ? "<td $red>" : "<td $green>").$realpower." W</td>";
+  }
 }
 if ($all && !$rows) $result[] = "<tr><td colspan='4' style='text-align:center'>No information available</td></tr>";
 
